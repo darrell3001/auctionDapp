@@ -1,28 +1,66 @@
 pragma solidity 0.4.24;
 
-contract Auction {
-  address public auctionOwner;
-  string  public itemName;
-  uint    public auctionEndTime;
-  address public maxBidder;
-  uint    public maxBid;
-  address public winningBidder;
-  uint    public winningBid;
+contract AuctionDapp {
 
   // Valid states for the auction
-  enum AuctionState {INPROGRESS, AWAITING_PAYMENT, AWAITING_SHIPMENT, AWAITING_DELIVERY, COMPLETE}
-  AuctionState public currentAuctionState;
+ enum AuctionState {INPROGRESS, AWAITING_PAYMENT, AWAITING_SHIPMENT, AWAITING_DELIVERY, COMPLETE}
 
-  constructor(string _itemName, uint _durationMinutes) public {
-    auctionOwner = msg.sender;
-    itemName = _itemName;
-    auctionEndTime = now + (_durationMinutes * 1 minutes);
-    currentAuctionState = AuctionState.INPROGRESS;
+
+  struct Auction {
+    uint    id;
+    address auctionOwner;
+    string  itemName;
+    uint    auctionEndTime;
+    address maxBidder;
+    uint    maxBid;
+    address winningBidder;
+    uint    winningBid;
+
+    AuctionState currentAuctionState;
+  }
+
+  
+  Auction[] public auctions; 
+  uint auctionCount;
+  uint maxAuctionDurationInMinutes = 60;
+   
+  constructor() public {
+    auctionCount = 0;
   }
 
   // Events that we will emit (can be subscribed)
-  event AuctionComplete(address winner, uint winningBid);
-  event BidAccepted(address newMaxBidder, uint newMaxBid);
+  event NewAuctionCreated(uint id, string itemName);
+  event AuctionComplete(uint id, address winner, uint winningBid);
+  event BidAccepted(uint id, address newMaxBidder, uint newMaxBid);
+
+  // getAuctionCount()
+  // view only function (read only)
+  function getAuctionCount() public view returns (uint) {
+      return auctionCount;
+  }
+
+
+  // createNewAuction()
+  // expects an itemName and duration (in Minutes)
+  function createNewAuction (string _itemName, uint _durationInMinutes) public payable isValidAuctionDuration(_durationInMinutes) returns (bool) {
+    Auction memory newAuction = Auction({ id                 : auctionCount,
+                                         auctionOwner        : msg.sender, 
+                                         itemName            : _itemName, 
+                                         auctionEndTime      : now + (_durationInMinutes * 1 minutes),
+                                         maxBidder           : address(0),
+                                         maxBid              : 0,
+                                         winningBidder       : address(0), 
+                                         winningBid          : 0, 
+                                         currentAuctionState : AuctionState.INPROGRESS  });
+
+    
+    auctions.push(newAuction);
+    auctionCount++;
+
+    //emit event
+    emit NewAuctionCreated (newAuction.id, _itemName);
+    return true;
+  }
 
 
   // bid()
@@ -30,63 +68,63 @@ contract Auction {
   // Bid must be greater than max bid
   // There must be time remaining in auction
   // AuctionState must be INPROGRESS
-  function bid() public payable notOwner bidGreaterThanMaxBid auctionTimeRemaining inState(AuctionState.INPROGRESS) {
-    if (maxBidder != address(0)) {
-        maxBidder.transfer(maxBid);
+  function bid(uint _id) public payable notOwner(_id) bidGreaterThanMaxBid(_id) auctionTimeRemaining(_id) inState(_id, AuctionState.INPROGRESS) {
+    if (auctions[_id].maxBidder != address(0)) {
+        auctions[_id].maxBidder.transfer(auctions[_id].maxBid);
     }
 
-    maxBidder = msg.sender;
-    maxBid = msg.value;
+    auctions[_id].maxBidder = msg.sender;
+    auctions[_id].maxBid = msg.value;
     
-    emit BidAccepted(maxBidder, maxBid);
+    emit BidAccepted(_id, auctions[_id].maxBidder, auctions[_id].maxBid);
   } 
 
   // end()
   // Auction be ended only by onwner
   // If no one had bid, then owner can end auction early, 
   // otherwise, auction can only be ended if time has expired
-  function end() public ownerOnly auctionCanBeEnded {
-    if (maxBidder == address(0)) {
-      currentAuctionState = AuctionState.COMPLETE;
+  function end(uint _id) public ownerOnly(_id) auctionCanBeEnded(_id) {
+    if (auctions[_id].maxBidder == address(0)) {
+      auctions[_id].currentAuctionState = AuctionState.COMPLETE;
     } else {
-      emit AuctionComplete(maxBidder, maxBid);
-      winningBidder = maxBidder;
-      winningBid = maxBid;
-      currentAuctionState = AuctionState.AWAITING_PAYMENT;
+      emit AuctionComplete(_id, auctions[_id].maxBidder, auctions[_id].maxBid);
+      auctions[_id].winningBidder = auctions[_id].maxBidder;
+      auctions[_id].winningBid = auctions[_id].maxBid;
+      auctions[_id].currentAuctionState = AuctionState.AWAITING_PAYMENT;
     }
   }
 
   // sendPayment()
   // may only be done by winning bidder
   // only if auction is in state AWAITING_PAYMENT
-  function sendPayment() public winningBidderOnly inState(AuctionState.AWAITING_PAYMENT) {
-    currentAuctionState = AuctionState.AWAITING_SHIPMENT;
+  function sendPayment(uint _id) public winningBidderOnly(_id) inState(_id, AuctionState.AWAITING_PAYMENT) {
+    auctions[_id].currentAuctionState = AuctionState.AWAITING_SHIPMENT;
   }
 
   // confirmShipment()
   // may only be one by auction owner
   // only if state is AWAITING_SHIPMENT
-  function confirmShipment() public ownerOnly inState(AuctionState.AWAITING_SHIPMENT) {
-    currentAuctionState = AuctionState.AWAITING_DELIVERY;
+  function confirmShipment(uint _id) public ownerOnly(_id) inState(_id, AuctionState.AWAITING_SHIPMENT) {
+    auctions[_id].currentAuctionState = AuctionState.AWAITING_DELIVERY;
   }
 
   // confirmDelivery()
   // Only by winning bidder
   // only if in state AWAITING_DELIVERY
-  function confirmDelivery() public winningBidderOnly inState(AuctionState.AWAITING_DELIVERY) {
-    currentAuctionState = AuctionState.COMPLETE;
-    auctionOwner.transfer(address(this).balance);
+  function confirmDelivery(uint _id) public winningBidderOnly(_id) inState(_id, AuctionState.AWAITING_DELIVERY) {
+    auctions[_id].currentAuctionState = AuctionState.COMPLETE;
+    auctions[_id].auctionOwner.transfer(address(this).balance);
   }
 
   // timeRemaining()
-  // public fuction return number o seconds left in auction
+  // public fuction return number of seconds left in auction
   // if auction has ended, returns 0
-  function timeRemaining() view public returns(int) {
-    if (currentAuctionState == AuctionState.INPROGRESS) {
-      if (auctionEndTime <= now) {
+  function timeRemainingInSeconds(uint _id) view public returns(int) {
+    if (auctions[_id].currentAuctionState == AuctionState.INPROGRESS) {
+      if (auctions[_id].auctionEndTime <= now) {
         return int(0);
       } else {
-        return int(auctionEndTime - now);
+        return int(auctions[_id].auctionEndTime - now);
       }
     } else {
       return int(0);
@@ -97,54 +135,60 @@ contract Auction {
   // Modifiers
   // Modifiers are pre-processors that we can apply to the state change requests
   // ------------------------------------------    
-  modifier inState(AuctionState expectedState) {
-    require(currentAuctionState == expectedState, "auction in unexpected state");
+  modifier isValidAuctionDuration(uint _durationInMinutes) {
+    require(_durationInMinutes <= maxAuctionDurationInMinutes, "auction max duration exceeded");
     _;
   }
 
-  modifier notInState(AuctionState expectedState) {
-    require(currentAuctionState != expectedState, "auction not in expected state");
+
+  modifier inState(uint _id, AuctionState expectedState) {
+    require(auctions[_id].currentAuctionState == expectedState, "auction in unexpected state");
     _;
   }
 
-  modifier ownerOnly() {
-    require(msg.sender == auctionOwner, "only the auction owner may perform this task");
-    _;
-  }     
-
-  modifier winningBidderOnly() {
-    require(msg.sender == winningBidder, "only the winning bidder may perform this task");
-    _;
-  }     
-
-  modifier notOwner() {
-    require(msg.sender != auctionOwner, "the auction owner may not perform this operation");
-    _;
-  }     
-
-  modifier maxBidNotZero() {
-    require(maxBid != 0, "the bid may not be zero");
-    _;
-  }     
-
-  modifier bidGreaterThanMaxBid() {
-    require(msg.value > maxBid, "bid must be greater than the max bid");
-    _;
-  }     
-
-  modifier auctionTimeRemaining() {
-    require(now < auctionEndTime, "auction has not ended");
+  modifier notInState(uint _id, AuctionState expectedState) {
+    require(auctions[_id].currentAuctionState != expectedState, "auction not in expected state");
     _;
   }
 
-  modifier auctionTimeExpired() {
-    require(now >= auctionEndTime, "auction has ended");
+  modifier ownerOnly(uint _id) {
+    require(msg.sender == auctions[_id].auctionOwner, "only the auction owner may perform this task");
+    _;
+  }     
+
+  modifier winningBidderOnly(uint _id) {
+    require(msg.sender == auctions[_id].winningBidder, "only the winning bidder may perform this task");
+    _;
+  }     
+
+  modifier notOwner(uint _id) {
+    require(msg.sender != auctions[_id].auctionOwner, "the auction owner may not perform this operation");
+    _;
+  }     
+
+  modifier maxBidNotZero(uint _id) {
+    require(auctions[_id].maxBid != 0, "the max bid is not zero");
+    _;
+  }     
+
+  modifier bidGreaterThanMaxBid(uint _id) {
+    require(msg.value > auctions[_id].maxBid, "bid must be greater than the max bid");
+    _;
+  }     
+
+  modifier auctionTimeRemaining(uint _id) {
+    require(now < auctions[_id].auctionEndTime, "auction has ended");
     _;
   }
 
-  modifier auctionCanBeEnded() {
-    if (maxBidder != address(0)) {
-        require(now >= auctionEndTime, "auction is still active");
+  modifier auctionTimeExpired(uint _id) {
+    require(now >= auctions[_id].auctionEndTime, "auction has ended");
+    _;
+  }
+
+  modifier auctionCanBeEnded(uint _id) {
+    if (auctions[_id].maxBidder != address(0)) {
+        require(now >= auctions[_id].auctionEndTime, "auction is still active");
     }
     _;
   }
