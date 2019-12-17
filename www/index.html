@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Auction DApp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+
+  <body>
+    <div>
+      <div>
+        <p id="auctionCount"></p>
+      </div>
+
+      <div>
+        <input id="newAuctionItemName" type="text" />
+        <input id="newAuctionDurationInMinutes" type="text" />
+        <button id="newAuctionButton">New</button>
+      </div>
+
+      <div>
+        <input id="listAuctionId" type="text" />
+        <button id="listAuctionButton">List</button>
+      </div>
+
+      <div>
+        <input id="bidAuctionId" type="text" />
+        <input id="bidAmount" type="text" />
+        <button id="bidButton">Bid</button>
+      </div>
+
+      <p id="status">Idle</p>
+      <p id="popCount">0</p>
+      <p id="last-transaction-status">no pending transactions</p>
+      <p id="version">v0.0.2</p>
+      <p id="errormsg"></p>
+    </div>
+
+    <link rel="stylesheet" type="text/css" href="/style/main.css" />
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/babel-polyfill/dist/polyfill.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.2.2/dist/web3.min.js"></script>
+    <script src="/scripts/smartContract.js"></script>
+    <script src="/scripts/auction.js"></script>
+  </body>
+</html>
