@@ -1,9 +1,4 @@
 // Initialize the linkage to the smart contract
-// We will need the ABI and address, which are copy/paste from remix IDE
-// Setup a Event subscription for the counterUpdated Event
-// Note that Web3 API does not support subscriptions on mobile devices
-// thus we have to use another method. Trap the error message and setup
-// an async timer pop for every 5 seconds
 function initContract() {
   contract = new web3.eth.Contract(abi, address);
 
@@ -36,7 +31,6 @@ function initContract() {
       // guid needed to work around https://github.com/MetaMask/metamask-extension/issues/6668
       if (lastGuid != event.returnValues.guid) {
         lastGuid = event.returnValues.guid;
-        console.log(event);
         console.log(
           "BidAccepted.onEvent - New bid accepted. id : " +
             event.returnValues.id +
@@ -53,15 +47,89 @@ function initContract() {
       console.log("BidAccepted.onEvent(error) - ", error);
       $("#errormsg").html(error.message);
     });
+
+  contract.events
+    .AuctionEnded()
+    .on("data", event => {
+      // guid needed to work around https://github.com/MetaMask/metamask-extension/issues/6668
+      if (lastGuid != event.returnValues.guid) {
+        lastGuid = event.returnValues.guid;
+        console.log(
+          "AuctionEnded.onEvent - Auction has ended. id : " +
+            event.returnValues.id +
+            ", winner : " +
+            event.returnValues.winner +
+            ", winningBid : " +
+            event.returnValues.winningBid
+        );
+        var curr = parseInt($("#popCount").html());
+        $("#popCount").html(curr + 1);
+      }
+    })
+    .on("error", error => {
+      console.log("AuctionEnded.onEvent(error) - ", error);
+      $("#errormsg").html(error.message);
+    });
+
+  contract.events
+    .WinnerSentPayment()
+    .on("data", event => {
+      // guid needed to work around https://github.com/MetaMask/metamask-extension/issues/6668
+      if (lastGuid != event.returnValues.guid) {
+        lastGuid = event.returnValues.guid;
+        console.log(
+          "WinnerSentPayment.onEvent - Winner has sent payment. id : " +
+            event.returnValues.id
+        );
+        var curr = parseInt($("#popCount").html());
+        $("#popCount").html(curr + 1);
+      }
+    })
+    .on("error", error => {
+      console.log("WinnerSentPayment.onEvent(error) - ", error);
+      $("#errormsg").html(error.message);
+    });
+
+  contract.events
+    .OwnerShippedItem()
+    .on("data", event => {
+      // guid needed to work around https://github.com/MetaMask/metamask-extension/issues/6668
+      if (lastGuid != event.returnValues.guid) {
+        lastGuid = event.returnValues.guid;
+        console.log(
+          "OwnerShippedItem.onEvent - Owner shipped item. id : " +
+            event.returnValues.id
+        );
+        var curr = parseInt($("#popCount").html());
+        $("#popCount").html(curr + 1);
+      }
+    })
+    .on("error", error => {
+      console.log("OwnerShippedItem.onEvent(error) - ", error);
+      $("#errormsg").html(error.message);
+    });
+
+  contract.events
+    .WinnerReceivedItem()
+    .on("data", event => {
+      // guid needed to work around https://github.com/MetaMask/metamask-extension/issues/6668
+      if (lastGuid != event.returnValues.guid) {
+        lastGuid = event.returnValues.guid;
+        console.log(
+          "WinnerReceivedItem.onEvent - Winner received item. id : " +
+            event.returnValues.id
+        );
+        var curr = parseInt($("#popCount").html());
+        $("#popCount").html(curr + 1);
+      }
+    })
+    .on("error", error => {
+      console.log("WinnerReceivedItem.onEvent(error) - ", error);
+      $("#errormsg").html(error.message);
+    });
 }
 
-// event NewAuctionCreated(uint id, string itemName);
-// event AuctionEnded(uint id, address winner, uint winningBid);
-// event BidAccepted(uint id, address maxBidder, uint maxBid);
-// event WinnerSentPayment(uint id);
-// event OwnerShippedItem(uint id);
-// event WinnerReceivedItem(uint id);
-
+// getAuction()
 function getAuction(auctionId) {
   try {
     contract.methods
@@ -83,9 +151,7 @@ function getAuction(auctionId) {
   }
 }
 
-// This is the simple call to the getCounter() function in the smart contract
-// Note this is done with an async callback thus the routine finishes immediatly
-// and the value is updated via jQuery via promise
+// getAuctionCount()
 function getAuctionCount() {
   try {
     contract.methods
@@ -99,28 +165,7 @@ function getAuctionCount() {
   }
 }
 
-function placeBid(auctionId, amount) {
-  contract.methods
-    .bid(auctionId, guid())
-    .send(
-      { from: fromAddress, value: web3.utils.toWei(amount.toString(), "wei") },
-      () => {
-        $("#status").html("waiting for confirmation");
-        $("#last-transaction-status").html("transaction is pending");
-      }
-    )
-    .then(receipt => {
-      console.log("placeBid.then() - bid placed for " + amount + " wie");
-      $("#status").html("idle");
-      $("#last-transaction-status").html("last transaction was successful");
-    })
-    .catch(err => {
-      $("#status").html("idle");
-      $("#last-transaction-status").html("last transaction failed");
-      console.log("createNewAuction.onError() - ", err.message);
-    });
-}
-
+// createNewAuction()
 function createNewAuction(itemName, durationInMinutes) {
   contract.methods
     .createNewAuction(itemName, durationInMinutes, guid())
@@ -140,6 +185,114 @@ function createNewAuction(itemName, durationInMinutes) {
     });
 }
 
+// placeBid()
+function placeBid(auctionId, amount) {
+  contract.methods
+    .bid(auctionId, guid())
+    .send(
+      { from: fromAddress, value: web3.utils.toWei(amount.toString(), "wei") },
+      () => {
+        $("#status").html("waiting for confirmation");
+        $("#last-transaction-status").html("transaction is pending");
+      }
+    )
+    .then(receipt => {
+      console.log("placeBid.then() - bid placed for " + amount + " wie");
+      $("#status").html("idle");
+      $("#last-transaction-status").html("last transaction was successful");
+    })
+    .catch(err => {
+      $("#status").html("idle");
+      $("#last-transaction-status").html("last transaction failed");
+      console.log("placeBid.onError() - ", err.message);
+    });
+}
+
+// endAuction()
+function endAuction(auctionId) {
+  contract.methods
+    .end(auctionId, guid())
+    .send({ from: fromAddress }, () => {
+      $("#status").html("waiting for confirmation");
+      $("#last-transaction-status").html("transaction is pending");
+    })
+    .then(receipt => {
+      console.log("endAuction.then() - Auction ended");
+      $("#status").html("idle");
+      $("#last-transaction-status").html("last transaction was successful");
+    })
+    .catch(err => {
+      $("#status").html("idle");
+      $("#last-transaction-status").html("last transaction failed");
+      console.log("endAuction.onError() - ", err.message);
+    });
+}
+
+// sendPayment()
+function sendPayment(auctionId) {
+  contract.methods
+    .sendPayment(auctionId, guid())
+    .send({ from: fromAddress }, () => {
+      $("#status").html("waiting for confirmation");
+      $("#last-transaction-status").html("transaction is pending");
+    })
+    .then(receipt => {
+      console.log("sendPayment.then() - Winner sent payment");
+      $("#status").html("idle");
+      $("#last-transaction-status").html("last transaction was successful");
+    })
+    .catch(err => {
+      $("#status").html("idle");
+      $("#last-transaction-status").html("last transaction failed");
+      console.log("sendPayment.onError() - ", err.message);
+    });
+}
+
+// shipped()
+function shipped(auctionId) {
+  contract.methods
+    .confirmShipment(auctionId, guid())
+    .send({ from: fromAddress }, () => {
+      $("#status").html("waiting for confirmation");
+      $("#last-transaction-status").html("transaction is pending");
+    })
+    .then(receipt => {
+      console.log("shipped.then() - Owner shipped item");
+      $("#status").html("idle");
+      $("#last-transaction-status").html("last transaction was successful");
+    })
+    .catch(err => {
+      $("#status").html("idle");
+      $("#last-transaction-status").html("last transaction failed");
+      console.log("shipped.onError() - ", err.message);
+    });
+}
+
+// received()
+function received(auctionId) {
+  contract.methods
+    .confirmDelivery(auctionId, guid())
+    .send({ from: fromAddress }, () => {
+      $("#status").html("waiting for confirmation");
+      $("#last-transaction-status").html("transaction is pending");
+    })
+    .then(receipt => {
+      console.log("received.then() - Winner received item");
+      $("#status").html("idle");
+      $("#last-transaction-status").html("last transaction was successful");
+    })
+    .catch(err => {
+      $("#status").html("idle");
+      $("#last-transaction-status").html("last transaction failed");
+      console.log("received.onError() - ", err.message);
+    });
+}
+
+// guid()
+// this function is used to create a guid to identify unique transactions
+// this is needed as a workaround because of this problem:
+// guid needed to work around https://github.com/MetaMask/metamask-extension/issues/6668
+// once this issue is resloved, this function can be removed
 function guid() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
     var r = (Math.random() * 16) | 0,
@@ -219,4 +372,28 @@ $("#bidButton").click(() => {
   var bidAuctionId = $("#bidAuctionId").val();
   var bidAmount = $("#bidAmount").val();
   placeBid(bidAuctionId, bidAmount);
+});
+
+// Click of endButton button
+$("#endButton").click(() => {
+  var endAuctionId = $("#bidAuctionId").val();
+  endAuction(endAuctionId);
+});
+
+// Click of sendPaymentButton button
+$("#sendPaymentButton").click(() => {
+  var sendPaymentAuctionId = $("#sendPaymentAuctionId").val();
+  sendPayment(sendPaymentAuctionId);
+});
+
+// Click of ShippedButton button
+$("#shippedButton").click(() => {
+  var shippedAuctionId = $("#shippedAuctionId").val();
+  shipped(shippedAuctionId);
+});
+
+// Click of receivedButton button
+$("#receivedButton").click(() => {
+  var receivedAuctionId = $("#receivedAuctionId").val();
+  received(receivedAuctionId);
 });

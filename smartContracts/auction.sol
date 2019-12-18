@@ -30,11 +30,11 @@ contract AuctionDapp {
 
   // Events that we will emit (can be subscribed)
   event NewAuctionCreated(uint id, string itemName, string guid);
-  event AuctionEnded(uint id, address winner, uint winningBid);
   event BidAccepted(uint id, address maxBidder, uint maxBid, string guid);
-  event WinnerSentPayment(uint id);
-  event OwnerShippedItem(uint id);
-  event WinnerReceivedItem(uint id);
+  event AuctionEnded(uint id, address winner, uint winningBid, string guid);
+  event WinnerSentPayment(uint id, string guid);
+  event OwnerShippedItem(uint id, string guid);
+  event WinnerReceivedItem(uint id, string guid);
 
   // getAuctionCount()
   // view only function (read only)
@@ -59,7 +59,6 @@ contract AuctionDapp {
     auctions.push(newAuction);
     auctionCount++;
 
-    //emit event
     emit NewAuctionCreated (newAuction.id, _itemName, _guid);
     return id;
   }
@@ -85,40 +84,40 @@ contract AuctionDapp {
   // Auction be ended only by onwner
   // If no one had bid, then owner can end auction early, 
   // otherwise, auction can only be ended if time has expired
-  function end(uint _id) public ownerOnly(_id) auctionCanBeEnded(_id) {
+  function end(uint _id, string memory _guid) public ownerOnly(_id) auctionCanBeEnded(_id) {
     if (auctions[_id].maxBidder == address(0)) {
       auctions[_id].currentState = AuctionState.COMPLETE;
     } else {
-      emit AuctionEnded(_id, auctions[_id].maxBidder, auctions[_id].maxBid);
       auctions[_id].winningBidder = auctions[_id].maxBidder;
       auctions[_id].winningBid = auctions[_id].maxBid;
       auctions[_id].currentState = AuctionState.AWAITING_PAYMENT;
     }
+    emit AuctionEnded(_id, auctions[_id].maxBidder, auctions[_id].maxBid, _guid);
   }
 
   // sendPayment()
   // may only be done by winning bidder
   // only if auction is in state AWAITING_PAYMENT
-  function sendPayment(uint _id) public winningBidderOnly(_id) inState(_id, AuctionState.AWAITING_PAYMENT) {
-    emit WinnerSentPayment(_id);
+  function sendPayment(uint _id, string memory _guid) public winningBidderOnly(_id) inState(_id, AuctionState.AWAITING_PAYMENT) {
     auctions[_id].currentState = AuctionState.AWAITING_SHIPMENT;
+    emit WinnerSentPayment(_id, _guid);
   }
 
   // confirmShipment()
   // may only be one by auction owner
   // only if state is AWAITING_SHIPMENT
-  function confirmShipment(uint _id) public ownerOnly(_id) inState(_id, AuctionState.AWAITING_SHIPMENT) {
-    emit OwnerShippedItem(_id);
+  function confirmShipment(uint _id, string memory _guid) public ownerOnly(_id) inState(_id, AuctionState.AWAITING_SHIPMENT) {
     auctions[_id].currentState = AuctionState.AWAITING_DELIVERY;
+    emit OwnerShippedItem(_id, _guid);
   }
 
   // confirmDelivery()
   // Only by winning bidder
   // only if in state AWAITING_DELIVERY
-  function confirmDelivery(uint _id) public winningBidderOnly(_id) inState(_id, AuctionState.AWAITING_DELIVERY) {
-    emit WinnerReceivedItem(_id);
+  function confirmDelivery(uint _id, string memory _guid) public winningBidderOnly(_id) inState(_id, AuctionState.AWAITING_DELIVERY) {
     auctions[_id].currentState = AuctionState.COMPLETE;
     auctions[_id].owner.transfer(address(this).balance);
+    emit WinnerReceivedItem(_id, _guid);
   }
 
   // timeRemaining()

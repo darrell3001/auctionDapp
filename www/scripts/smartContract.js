@@ -1,4 +1,4 @@
-var address = "0xc3c29c57a3c1bea47Af794526075577b6a7c8dB7";
+var address = "0xb65d2995240ac90d89b52Ebc005f13Ddd8C5BA26";
 
 var abi = [
   {
@@ -27,6 +27,12 @@ var abi = [
         internalType: "uint256",
         name: "winningBid",
         type: "uint256"
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "guid",
+        type: "string"
       }
     ],
     name: "AuctionEnded",
@@ -90,6 +96,11 @@ var abi = [
         internalType: "uint256",
         name: "_id",
         type: "uint256"
+      },
+      {
+        internalType: "string",
+        name: "_guid",
+        type: "string"
       }
     ],
     name: "confirmDelivery",
@@ -105,6 +116,11 @@ var abi = [
         internalType: "uint256",
         name: "_id",
         type: "uint256"
+      },
+      {
+        internalType: "string",
+        name: "_guid",
+        type: "string"
       }
     ],
     name: "confirmShipment",
@@ -151,6 +167,11 @@ var abi = [
         internalType: "uint256",
         name: "_id",
         type: "uint256"
+      },
+      {
+        internalType: "string",
+        name: "_guid",
+        type: "string"
       }
     ],
     name: "end",
@@ -192,6 +213,12 @@ var abi = [
         internalType: "uint256",
         name: "id",
         type: "uint256"
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "guid",
+        type: "string"
       }
     ],
     name: "OwnerShippedItem",
@@ -204,6 +231,11 @@ var abi = [
         internalType: "uint256",
         name: "_id",
         type: "uint256"
+      },
+      {
+        internalType: "string",
+        name: "_guid",
+        type: "string"
       }
     ],
     name: "sendPayment",
@@ -220,6 +252,12 @@ var abi = [
         internalType: "uint256",
         name: "id",
         type: "uint256"
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "guid",
+        type: "string"
       }
     ],
     name: "WinnerReceivedItem",
@@ -233,6 +271,12 @@ var abi = [
         internalType: "uint256",
         name: "id",
         type: "uint256"
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "guid",
+        type: "string"
       }
     ],
     name: "WinnerSentPayment",
