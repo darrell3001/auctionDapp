@@ -1,7 +1,7 @@
-// Initialize the linkage to the smart contract
-function initContract() {
-  contract = new web3.eth.Contract(abi, address);
-
+// subscribeToEvents()
+function subscribeToEvents() {
+  
+  //#region .NewAuctionCreated()
   contract.events
     .NewAuctionCreated()
     .on("data", event => {
@@ -24,7 +24,9 @@ function initContract() {
       console.log("NewAuctionCreated.onEvent(error) - ", error);
       $("#errormsg").html(error.message);
     });
+  //#endregion
 
+  //#region BidAccepted()
   contract.events
     .BidAccepted()
     .on("data", event => {
@@ -47,7 +49,9 @@ function initContract() {
       console.log("BidAccepted.onEvent(error) - ", error);
       $("#errormsg").html(error.message);
     });
+  //#endregion
 
+  //#region AuctionEnded()
   contract.events
     .AuctionEnded()
     .on("data", event => {
@@ -70,7 +74,9 @@ function initContract() {
       console.log("AuctionEnded.onEvent(error) - ", error);
       $("#errormsg").html(error.message);
     });
+  //#endregion
 
+  //#region WinnerSentPayment
   contract.events
     .WinnerSentPayment()
     .on("data", event => {
@@ -89,7 +95,9 @@ function initContract() {
       console.log("WinnerSentPayment.onEvent(error) - ", error);
       $("#errormsg").html(error.message);
     });
+  //#endregion
 
+  //#region OwnerShippedItem()
   contract.events
     .OwnerShippedItem()
     .on("data", event => {
@@ -108,7 +116,9 @@ function initContract() {
       console.log("OwnerShippedItem.onEvent(error) - ", error);
       $("#errormsg").html(error.message);
     });
+  //#endregion
 
+  //#region WinnerReceivedItem()
   contract.events
     .WinnerReceivedItem()
     .on("data", event => {
@@ -127,42 +137,41 @@ function initContract() {
       console.log("WinnerReceivedItem.onEvent(error) - ", error);
       $("#errormsg").html(error.message);
     });
+  //#endregion
 }
 
 // getAuction()
 function getAuction(auctionId) {
-  try {
-    contract.methods
-      .auctions(auctionId)
-      .call()
-      .then(result => {
-        console.log("id : " + result["id"]);
-        console.log("itemName : " + result["itemName"]);
-        // to convert to datetime in JS, multiply solidity date by 1000
-        let date = new Date(result["endTime"] * 1000);
-        console.log("endTime : " + date);
-        console.log("maxBidder : " + result["maxBidder"]);
-        console.log("maxBid : " + result["maxBid"]);
-        console.log("winningBidder : " + result["winningBidder"]);
-        console.log("winningBid : " + result["winningBid"]);
-      });
-  } catch (error) {
-    console.log(error.message);
-  }
+  contract.methods
+    .auctions(auctionId)
+    .call()
+    .then(result => {
+      console.log("id : " + result["id"]);
+      console.log("itemName : " + result["itemName"]);
+      // to convert to datetime in JS, multiply solidity date by 1000
+      let date = new Date(result["endTime"] * 1000);
+      console.log("endTime : " + date);
+      console.log("maxBidder : " + result["maxBidder"]);
+      console.log("maxBid : " + result["maxBid"]);
+      console.log("winningBidder : " + result["winningBidder"]);
+      console.log("winningBid : " + result["winningBid"]);
+    })
+    .catch(error => {
+      console.log(error.message);
+    });
 }
 
 // getAuctionCount()
 function getAuctionCount() {
-  try {
-    contract.methods
-      .getAuctionCount()
-      .call()
-      .then(result => {
-        $("#auctionCount").html(result);
-      });
-  } catch (error) {
-    $("#errormsg").html(error.message);
-  }
+  contract.methods
+    .getAuctionCount()
+    .call()
+    .then(result => {
+      $("#auctionCount").html(result);
+    })
+    .catch(error => {
+      $("#errormsg").html(error.message);
+    });
 }
 
 // createNewAuction()
@@ -329,15 +338,19 @@ window.addEventListener("load", async () => {
         window.ethereum.on("accountsChanged", function(accounts) {
           fromAddress = accounts[0];
         });
-        initContract();
+
+        contract = new web3.eth.Contract(abi, address);
+        subscribeToEvents();
         getAuctionCount();
       });
     } catch (error) {
       // User denied account access...
-      console.log("User did not give permission to use wallet");
+      alert("User did not give permission to use wallet. Cannot proceed.");
       console.log(error);
       $("#errormsg").html("User did not give permission to use wallet");
     }
+  } else {
+    alert("Please install MetaMask. How To instructions can be found here: https://www.youtube.com/watch?v=wTlI2_zxXpU")
   }
 });
 
