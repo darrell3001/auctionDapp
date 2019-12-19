@@ -5,56 +5,86 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Auction DApp</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style/main.css" />
   </head>
 
   <body>
-    <div>
-      <div>
-        <p id="auctionCount"></p>
+    <div class="counter card margin-block">
+      <h1>Number of Auctions</h1>
+      <p id="auctionCount">0</p>
+    </div>
+    <div class="container flex-wrap margin-block">
+      <div class="seller">
+        <h1>Sell Dash</h1>
+        <div class="card margin-stan flex-column">
+          <label for="">Item:</label
+          ><input
+            id="newAuctionItemName"
+            class="booster"
+            type="text"
+            placeholder="Description"
+          />
+          <label for="">Duration:</label
+          ><input
+            id="newAuctionDurationInMinutes"
+            class="booster"
+            type="text"
+            placeholder="In Minutes"
+          />
+          <button id="newAuctionButton">Create Auction</button>
+        </div>
+        
+        <div class="card margin-stan flex-column">
+          <label>Auction Id:</label>
+          <input id="listAuctionId" class="booster" type="text" />
+          <button id="listAuctionButton" class="booster">List</button>
+          <label>Auction Id:</label>
+          <input id="endAuctionId" type="text" class="booster" />
+          <button id="endButton">End</button>
+        </div>
+
+        <div class="card margin-stan flex-column">
+          <label>Auction Id:</label>
+          <input id="shippedAuctionId" class="booster" type="text" />
+          <button id="shippedButton">Shipped</button>
+        </div>
+      </div>
+      <div class="bidder">
+        <h1>Bid Dash</h1>
+        <div class="card margin-stan flex-column">
+          <label>Auction Id:</label>
+          <input id="bidAuctionId" class="booster" type="text" />
+          <label>Bid Amount:</label>
+          <input id="bidAmount" class="booster" type="text" />
+          <button id="bidButton">Bid</button>
+        </div>
+
+        <div class="card margin-stan flex-column">
+          <label>Auction Id:</label>
+          <input id="sendPaymentAuctionId" class="booster" type="text" />
+          <button id="sendPaymentButton">Send Payment</button>
+        </div>
+
+        <div class="card margin-stan flex-column">
+          <label>Auction Id:</label>
+          <input id="receivedAuctionId" class="booster" type="text" />
+          <button id="receivedButton">Received</button>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-container card flex-row margin-block">
+      <div class="flex-column margin-stan">
+        <label for="">Status:</label><textarea id="status">Idle</textarea>
+        <label for="">Pop Count:</label>
+        <textarea id="popCount">0</textarea>
+        <label for="">Last Status:</label>
+        <textarea id="last-transaction-status">no pending transactions</textarea>
       </div>
 
       <div>
-        <input id="newAuctionItemName" type="text" />
-        <input id="newAuctionDurationInMinutes" type="text" />
-        <button id="newAuctionButton">New</button>
+        <p id="version">Version: 0.0.3</p>
+        <p id="errormsg" class="highlight red">Error Display</p>
       </div>
-
-      <div>
-        <input id="listAuctionId" type="text" />
-        <button id="listAuctionButton">List</button>
-      </div>
-
-      <div>
-        <input id="bidAuctionId" type="text" />
-        <input id="bidAmount" type="text" />
-        <button id="bidButton">Bid</button>
-      </div>
-
-      <div>
-        <input id="endAuctionId" type="text" />
-        <button id="endButton">End</button>
-      </div>
-
-      <div>
-        <input id="sendPaymentAuctionId" type="text" />
-        <button id="sendPaymentButton">Send Payment</button>
-      </div>
-
-      <div>
-        <input id="shippedAuctionId" type="text" />
-        <button id="shippedButton">Shipped</button>
-      </div>
-
-      <div>
-        <input id="receivedAuctionId" type="text" />
-        <button id="receivedButton">Received</button>
-      </div>
-
-      <p id="status">Idle</p>
-      <p id="popCount">0</p>
-      <p id="last-transaction-status">no pending transactions</p>
-      <p id="version">v0.0.3</p>
-      <p id="errormsg"></p>
     </div>
 
     <link rel="stylesheet" type="text/css" href="/style/main.css" />
