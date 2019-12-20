@@ -490,12 +490,6 @@ $("#newAuctionButton").click(() => {
   createNewAuction(itemName, durationInMinutes);
 });
 
-// Click of listAuction button
-$("#listAuctionButton").click(() => {
-  var auctionId = $("#listAuctionId").val();
-  getAuction(auctionId);
-});
-
 // Click of bidButton button
 $("#bidButton").click(() => {
   var bidAuctionId = $("#bidAuctionId").val();
@@ -505,7 +499,7 @@ $("#bidButton").click(() => {
 
 // Click of endButton button
 $("#endButton").click(() => {
-  var endAuctionId = $("#bidAuctionId").val();
+  var endAuctionId = $("#endAuctionId").val();
   endAuction(endAuctionId);
 });
 
