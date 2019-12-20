@@ -9,10 +9,10 @@
   </head>
 
   <body>
-    <div class="counter card margin-block">
-      <h1>Number of Auctions</h1>
-      <p id="auctionCount">0</p>
+    <div>
+      <table id="dashboard" border="1"></table>
     </div>
+
     <div class="container flex-wrap margin-block">
       <div class="seller">
         <h1>Sell Dash</h1>
@@ -33,11 +33,8 @@
           />
           <button id="newAuctionButton">Create Auction</button>
         </div>
-        
+
         <div class="card margin-stan flex-column">
-          <label>Auction Id:</label>
-          <input id="listAuctionId" class="booster" type="text" />
-          <button id="listAuctionButton" class="booster">List</button>
           <label>Auction Id:</label>
           <input id="endAuctionId" type="text" class="booster" />
           <button id="endButton">End</button>
@@ -72,13 +69,21 @@
         </div>
       </div>
     </div>
+
+    <div class="counter card margin-block">
+      <h1>Number of Auctions</h1>
+      <p id="auctionCount">0</p>
+    </div>
+
     <div class="bottom-container card flex-row margin-block">
       <div class="flex-column margin-stan">
         <label for="">Status:</label><textarea id="status">Idle</textarea>
         <label for="">Pop Count:</label>
         <textarea id="popCount">0</textarea>
         <label for="">Last Status:</label>
-        <textarea id="last-transaction-status">no pending transactions</textarea>
+        <textarea id="last-transaction-status">
+          no pending transactions</textarea
+        >
       </div>
 
       <div>

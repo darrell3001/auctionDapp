@@ -16,7 +16,11 @@ function subscribeToEvents() {
 
         var curr = parseInt($("#popCount").html());
         $("#popCount").html(curr + 1);
-        getAuctionCount();
+        getAuctionCount().then(auctionCount => {
+          $("#auctionCount").html(auctionCount);
+        });
+
+        buildDashboardData(event.returnValues.id);
       }
     })
     .on("error", error => {
@@ -42,6 +46,10 @@ function subscribeToEvents() {
         );
         var curr = parseInt($("#popCount").html());
         $("#popCount").html(curr + 1);
+
+        var dashboardId = "d-" + event.returnValues.id + "-" + "maxBid";
+        document.getElementById(dashboardId).innerText =
+          event.returnValues.maxBid;
       }
     })
     .on("error", error => {
@@ -67,6 +75,13 @@ function subscribeToEvents() {
         );
         var curr = parseInt($("#popCount").html());
         $("#popCount").html(curr + 1);
+
+        var dashboardId = "d-" + event.returnValues.id + "-" + "winningBid";
+        document.getElementById(dashboardId).innerText =
+          event.returnValues.winningBid;
+
+        var dashboardId = "d-" + event.returnValues.id + "-" + "currentState";
+        document.getElementById(dashboardId).innerText = mapAuctionState("1");
       }
     })
     .on("error", error => {
@@ -88,6 +103,9 @@ function subscribeToEvents() {
         );
         var curr = parseInt($("#popCount").html());
         $("#popCount").html(curr + 1);
+
+        var dashboardId = "d-" + event.returnValues.id + "-" + "currentState";
+        document.getElementById(dashboardId).innerText = mapAuctionState("2");
       }
     })
     .on("error", error => {
@@ -109,6 +127,9 @@ function subscribeToEvents() {
         );
         var curr = parseInt($("#popCount").html());
         $("#popCount").html(curr + 1);
+
+        var dashboardId = "d-" + event.returnValues.id + "-" + "currentState";
+        document.getElementById(dashboardId).innerText = mapAuctionState("3");
       }
     })
     .on("error", error => {
@@ -130,6 +151,9 @@ function subscribeToEvents() {
         );
         var curr = parseInt($("#popCount").html());
         $("#popCount").html(curr + 1);
+
+        var dashboardId = "d-" + event.returnValues.id + "-" + "currentState";
+        document.getElementById(dashboardId).innerText = mapAuctionState("4");
       }
     })
     .on("error", error => {
@@ -141,44 +165,121 @@ function subscribeToEvents() {
 
 // getAuction()
 function getAuction(auctionId) {
-  return contract.methods.auctions(auctionId).call();
+  return contract.methods
+    .auctions(auctionId)
+    .call()
+    .catch(error => {
+      $("#errormsg").html(error.message);
+      console.log("getAuction() - error - ", error.message);
+    });
 }
 
 // getAuctionCount()
 function getAuctionCount() {
-  contract.methods
+  return contract.methods
     .getAuctionCount()
     .call()
-    .then(result => {
-      $("#auctionCount").html(result);
-    })
     .catch(error => {
       $("#errormsg").html(error.message);
+      console.log("getAuctionCount() - error - ", error.message);
     });
 }
 
-// getAllAuctionInfo()
-function getAllAuctions() {
-  var auctionCount = parseInt($("#auctionCount").html());
+function mapAuctionState(state) {
+  switch (state) {
+    case "0":
+      return "In Progress";
 
-  for (var auctionId = 0; auctionId < auctionCount; auctionId++) {
-    getAuction(auctionId)
-      .then(function(result) {
-        console.log("id : " + result["id"]);
-        console.log("itemName : " + result["itemName"]);
-        // to convert to datetime in JS, multiply solidity date by 1000
-        let date = new Date(result["endTime"] * 1000);
-        console.log("endTime : " + date);
-        console.log("maxBidder : " + result["maxBidder"]);
-        console.log("maxBid : " + result["maxBid"]);
-        console.log("winningBidder : " + result["winningBidder"]);
-        console.log("winningBid : " + result["winningBid"]);
-        console.log("currentState : " + result["currentState"]);
-      })
-      .catch(error => {
-        console.log(error.message);
-      });
+    case "1":
+      return "Ended - Awaiting Payment";
+
+    case "2":
+      return "Ended - Awaiting Shipping";
+
+    case "3":
+      return "Ended - Awaiting Delivery";
+
+    case "4":
+      return "Complete";
+
+    default:
+      return "Unknown";
   }
+}
+
+function buildDashboardHeadings() {
+  var dashboard = document.getElementById("dashboard");
+
+  var headings$ = $("<tr></tr>");
+  headings$.append($("<th></th>").html("id"));
+  headings$.append($("<th></th>").html("Item"));
+  headings$.append($("<th></th>").html("End Time"));
+  headings$.append($("<th></th>").html("Max Bid"));
+  headings$.append($("<th></th>").html("Winning Bid"));
+  headings$.append($("<th></th>").html("Current State"));
+  $(dashboard).append(headings$);
+}
+
+// buildDashboardData()
+function buildDashboardData(auctionId) {
+  getAuction(auctionId).then(function(result) {
+    var row$ = $("<tr></tr>");
+    var rowIdPrefix = "d-" + result["id"] + "-";
+    var rowIdSuffix = "";
+    rowIdSuffix = "id";
+    row$.append(
+      $("<td id=" + rowIdPrefix + rowIdSuffix + "></td>").html(result["id"])
+    );
+    rowIdSuffix = "itemName";
+    row$.append(
+      $("<td id=" + rowIdPrefix + rowIdSuffix + "></td>").html(
+        result["itemName"]
+      )
+    );
+    // // to convert to datetime in JS, multiply solidity date by 1000
+    rowIdSuffix = "endTime";
+    row$.append(
+      $("<td id=" + rowIdPrefix + rowIdSuffix + "></td>").html(
+        new Date(result["endTime"] * 1000)
+      )
+    );
+    rowIdSuffix = "maxBid";
+    row$.append(
+      $("<td id=" + rowIdPrefix + rowIdSuffix + "></td>").html(result["maxBid"])
+    );
+    rowIdSuffix = "winningBid";
+    row$.append(
+      $("<td id=" + rowIdPrefix + rowIdSuffix + "></td>").html(
+        result["winningBid"]
+      )
+    );
+    rowIdSuffix = "currentState";
+    row$.append(
+      $("<td id=" + rowIdPrefix + rowIdSuffix + "></td>").html(
+        mapAuctionState(result["currentState"])
+      )
+    );
+
+    // let date = new Date(result["endTime"] * 1000);
+    // console.log("endTime : " + date);
+    // console.log("maxBidder : " + result["maxBidder"]);
+    // console.log("maxBid : " + result["maxBid"]);
+    // console.log("winningBidder : " + result["winningBidder"]);
+    // console.log("winningBid : " + result["winningBid"]);
+    // console.log("currentState : " + result["currentState"]);
+    $(dashboard).append(row$);
+  });
+}
+
+// buildAllDashboardData()
+function buildAllDashboardData() {
+  var dashboard = document.getElementById("dashboard");
+
+  getAuctionCount().then(auctionCount => {
+    for (var auctionId = 0; auctionId < auctionCount; auctionId++) {
+      buildDashboardData(auctionId);
+    }
+  });
 }
 
 // createNewAuction()
@@ -347,17 +448,23 @@ window.addEventListener("load", async () => {
         });
 
         contract = new web3.eth.Contract(abi, address);
+        buildDashboardHeadings();
+        buildAllDashboardData();
         subscribeToEvents();
-        getAuctionCount();
+        getAuctionCount().then(auctionCount => {
+          $("#auctionCount").html(auctionCount);
+        });
       });
     } catch (error) {
       // User denied account access...
-      alert("User did not give permission to use wallet. Cannot proceed.");
-      console.log(error);
-      $("#errormsg").html("User did not give permission to use wallet");
+      console.log("caught error: ", error);
+      console.log(
+        "maybe user didn't give permission to use wallet??. Cannot proceed."
+      );
+      $("#errormsg").html("caught error. see console log for details");
     }
   } else {
-    alert(
+    console.log(
       "Please install MetaMask. How To instructions can be found here: https://www.youtube.com/watch?v=wTlI2_zxXpU"
     );
   }
