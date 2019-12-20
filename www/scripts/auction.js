@@ -1,6 +1,5 @@
 // subscribeToEvents()
 function subscribeToEvents() {
-  
   //#region .NewAuctionCreated()
   contract.events
     .NewAuctionCreated()
@@ -142,23 +141,7 @@ function subscribeToEvents() {
 
 // getAuction()
 function getAuction(auctionId) {
-  contract.methods
-    .auctions(auctionId)
-    .call()
-    .then(result => {
-      console.log("id : " + result["id"]);
-      console.log("itemName : " + result["itemName"]);
-      // to convert to datetime in JS, multiply solidity date by 1000
-      let date = new Date(result["endTime"] * 1000);
-      console.log("endTime : " + date);
-      console.log("maxBidder : " + result["maxBidder"]);
-      console.log("maxBid : " + result["maxBid"]);
-      console.log("winningBidder : " + result["winningBidder"]);
-      console.log("winningBid : " + result["winningBid"]);
-    })
-    .catch(error => {
-      console.log(error.message);
-    });
+  return contract.methods.auctions(auctionId).call();
 }
 
 // getAuctionCount()
@@ -172,6 +155,30 @@ function getAuctionCount() {
     .catch(error => {
       $("#errormsg").html(error.message);
     });
+}
+
+// getAllAuctionInfo()
+function getAllAuctions() {
+  var auctionCount = parseInt($("#auctionCount").html());
+
+  for (var auctionId = 0; auctionId < auctionCount; auctionId++) {
+    getAuction(auctionId)
+      .then(function(result) {
+        console.log("id : " + result["id"]);
+        console.log("itemName : " + result["itemName"]);
+        // to convert to datetime in JS, multiply solidity date by 1000
+        let date = new Date(result["endTime"] * 1000);
+        console.log("endTime : " + date);
+        console.log("maxBidder : " + result["maxBidder"]);
+        console.log("maxBid : " + result["maxBid"]);
+        console.log("winningBidder : " + result["winningBidder"]);
+        console.log("winningBid : " + result["winningBid"]);
+        console.log("currentState : " + result["currentState"]);
+      })
+      .catch(error => {
+        console.log(error.message);
+      });
+  }
 }
 
 // createNewAuction()
@@ -350,7 +357,9 @@ window.addEventListener("load", async () => {
       $("#errormsg").html("User did not give permission to use wallet");
     }
   } else {
-    alert("Please install MetaMask. How To instructions can be found here: https://www.youtube.com/watch?v=wTlI2_zxXpU")
+    alert(
+      "Please install MetaMask. How To instructions can be found here: https://www.youtube.com/watch?v=wTlI2_zxXpU"
+    );
   }
 });
 
